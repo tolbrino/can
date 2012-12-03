@@ -12,7 +12,7 @@ override CFLAGS += -fpic -shared -I ../../../erlang-eapi-*/git/include/
 
 
 $(PRIVDIR)/can_sock_drv.so : can_sock_drv.o can_sock_drv_impl.o
-	$(CC) -shared -fpic $(LDFLAGS) ../../../erlang-eapi-*/git/include/eapi_drv.so -o $@ $^ 
+	$(CC) -shared -fpic $(LDFLAGS) ../../../erlang-eapi-*/git/priv/eapi_drv.so -o $@ $^ 
 
 clean:
 	$(RM) -f $(PRIVDIR)/can_sock_drv.so can_sock_drv.o can_sock_drv_impl.o 
