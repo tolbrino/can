@@ -26,7 +26,7 @@
 -export([start/0,start/1,stop/1,init/1]).
 -export([format_frame/1]).
 
--include_lib("can/include/can.hrl").
+-include_lib("can.hrl").
 
 start() ->
     start([]).
@@ -63,10 +63,10 @@ loop(T0, FrameCount) ->
 
 format_frame(Frame) ->
     ["ID: ", if ?is_can_frame_eff(Frame) ->
-		    io_lib:format("~8.16.0B", 
+		    io_lib:format("~8.16.0B",
 				  [Frame#can_frame.id band ?CAN_EFF_MASK]);
 		true ->
-		     io_lib:format("~3.16.0B", 
+		     io_lib:format("~3.16.0B",
 				   [Frame#can_frame.id band ?CAN_SFF_MASK])
 	     end,
      " LEN:", io_lib:format("~w", [Frame#can_frame.len]),
@@ -95,10 +95,10 @@ format_data(<<H,T/binary>>) ->
     [io_lib:format("~2.16.0B", [H]) | format_data(T)];
 format_data(<<>>) ->
     [].
-	
+
 print_frame(T, Frame) ->
     S = T div 1000000,
     Us = T rem 1000000,
     io:format("~w.~w: ~s\n", [S,Us,format_frame(Frame)]).
 
-    
+
