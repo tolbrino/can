@@ -8,7 +8,7 @@ PRIVDIR := ../priv
 
 all : $(PRIVDIR)/can_sock_drv.so 
 
-override CFLAGS += -fpic -shared -I ../../../erlang-dthread-*/git/include/
+override CFLAGS += -DDLOG_DEFAULT=DLOG_NONE -fpic -shared -I ../../../erlang-dthread-*/git/include/
 
 
 $(PRIVDIR)/can_sock_drv.so : can_sock_drv.o
