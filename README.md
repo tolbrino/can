@@ -31,10 +31,9 @@ can is built using rebar that can be found [here](https://github.com/basho/rebar
 
 can also requires the following applications to be installed:
 <ul>
-<li>sl - https://github.com/tonyrog/sl</li>
-<li>eapi - https://github.com/tonyrog/eapi</li>
+<li>dthread - https://github.com/tonyrog/dthread</li>
+<li>uart - https://github.com/tonyrog/uart</li>
 </ul>
-
 
 ### Downloading
 
@@ -46,6 +45,23 @@ $ git clone git://github.com/tonyrog/can.git
 ### Configurating
 #### Concepts
 
+### Linux virtual can driver
+
+#### load the driver
+    $ sudo modprobe vcan
+
+#### Create a virtual CAN network interface called 'vcan0'
+    $ sudo ip link add dev vcan0 type vcan
+     
+#### Activate a virtual CAN network interface called 'vcan0'
+    $ sudo ifconfig vcan0 up
+
+#### Remote a (virtual) CAN network interface 'vcan0'
+    $ sudp ip link del vcan0
+    
+#### Create a virtual CAN network interface
+    $ sudo ip link add type vcan
+    
 ...
 
 #### Files
