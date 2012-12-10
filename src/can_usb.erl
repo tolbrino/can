@@ -17,7 +17,7 @@
 %%%-------------------------------------------------------------------
 %%% File    : can_usb.erl
 %%% Author  : Tony Rogvall <tony@rogvall.se>
-%%% Description : CAN USB (VC) interface
+%%% Description : CAN USB (VC) interface 
 %%%
 %%% Created : 17 Sep 2009 by Tony Rogvall <tony@rogvall.se>
 %%%-------------------------------------------------------------------
@@ -38,7 +38,7 @@
 
 -compile(export_all).
 
--record(s,
+-record(s, 
 	{
 	  id,              %% interface id
 	  uart,            %% serial line port id
@@ -183,29 +183,16 @@ init([Id,Args]) ->
     end.
 
 
-<<<<<<< HEAD
-open(S0=#s {device_name = DeviceName, baud_rate = Speed, offset = Offset,
-	    status_interval = Interval, can_speed = BitRate,
-	    retry_timeout = RetryTimeout}) ->
-
-    SL = sl,
-    DOpts = [binary,{baud,Speed},{buftm,1},{bufsz,128},
-	     {stopb,1},{parity,0},{mode,raw}],
-    case SL:open(DeviceName,DOpts) of
-	{ok,SL} ->
-	    ?dbg(S0,"CANUSB open: ~s@~w\n", [DeviceName,Speed]),
-=======
-open(S0=#s {device = DeviceName, baud_rate = Speed, offset = Offset,
+open(S0=#s {device = DeviceName, baud_rate = Speed, offset = Offset, 
 	    status_interval = Interval, can_speed = BitRate }) ->
 
     DOpts = [{mode,binary},{baud,Speed},{packet,0},
 	     {csize,8},{stopb,1},{parity,none},{active,true}
 	     %% {buftm,1},{bufsz,128}
-	    ],
+	    ],    
     case uart:open(DeviceName,DOpts) of
 	{ok,U} ->
 	    lager:debug("canusb:open: ~s@~w", [DeviceName,Speed]),
->>>>>>> tonyrog/master
 	    case can_router:join({?MODULE,DeviceName,Offset}) of
 		{ok,ID} ->
 		    lager:debug("canusb:joined: intf=~w", [ID]),
@@ -229,7 +216,7 @@ open(S0=#s {device = DeviceName, baud_rate = Speed, offset = Offset,
 	    lager:error("canusb:open: error ~w", [Error]),
 	    Error
     end.
-
+    
 %%--------------------------------------------------------------------
 %% Function: %% handle_call(Request, From, State) -> {reply, Reply, State} |
 %%                                      {reply, Reply, State, Timeout} |
@@ -297,7 +284,7 @@ handle_cast({del_filter,From,I}, S) ->
 handle_cast({get_filter,From,I}, S) ->
     Reply = can_router:fs_get(I,S#s.fs),
     gen_server:reply(From, Reply),
-    {noreply, S};
+    {noreply, S};  
 handle_cast({list_filter,From}, S) ->
     Reply = can_router:fs_list(S#s.fs),
     gen_server:reply(From, Reply),
@@ -321,10 +308,10 @@ handle_info({uart,U,Data}, S) when S#s.uart == U ->
 
 handle_info({uart_error,U,Reason}, S) when U =:= S#s.uart ->
     if Reason =:= enxio ->
-	    lager:error("uart error ~p device ~s unplugged?",
+	    lager:error("uart error ~p device ~s unplugged?", 
 			[Reason,S#s.device]);
        true ->
-	    lager:error("uart error ~p for device ~s",
+	    lager:error("uart error ~p for device ~s", 
 			[Reason,S#s.device])
     end,
     {noreply, S};
@@ -340,7 +327,7 @@ handle_info({timeout,Ref,status}, S) when Ref =:= S#s.status_timer ->
     case command(S, "F") of
 	{ok, [$F|Status], S1} ->
 	    try erlang:list_to_integer(Status, 16) of
-		0 ->
+		0 -> 
 		    {noreply,start_timer(S1)};
 		Code ->
 		    S2 = error_input(Code, S1),
@@ -352,13 +339,8 @@ handle_info({timeout,Ref,status}, S) when Ref =:= S#s.status_timer ->
 		    {noreply,start_timer(S1)}
 	    end;
 	{ok, Status, S1} ->
-<<<<<<< HEAD
-	    error_logger:error_msg("can_usb: status error: ~p\n", [Status]),
-	    {noreply, start_timer(S1)};
-=======
 	    lager:error("can_usb: status error: ~p", [Status]),
-	    {noreply, start_timer(S1)};
->>>>>>> tonyrog/master
+	    {noreply, start_timer(S1)};	    
 	{{error,Reason}, S1} ->
 	    lager:error("can_usb: status error: ~p", [Reason]),
 	    {noreply, start_timer(S1)}
@@ -371,7 +353,7 @@ handle_info(retry, S) ->
 
 handle_info(_Info, S) ->
     {noreply, S}.
-
+    
 %%--------------------------------------------------------------------
 %% Function: terminate(Reason, State) -> void()
 %% Description: This function is called by a gen_server when it is about to
@@ -442,7 +424,7 @@ send_frame(S, Frame) ->
 ihex(I) ->
     element(I+1, {$0,$1,$2,$3,$4,$5,$6,$7,$8,$9,$A,$B,$C,$D,$E,$F}).
 
-%% minimum L elements - fill with 0
+%% minimum L elements - fill with 0  
 to_hex_min(_,0) -> [];
 to_hex_min(<<>>,I) -> [$0|to_hex_min(<<>>,I-1)];
 to_hex_min(<<H1:4,H2:4,Rest/binary>>,I) ->
@@ -487,7 +469,7 @@ canusb_set_bitrate(S, BitRate) ->
 
 command_nop(S) ->
     command(S, "").
-
+	
 command_open(S) ->
     command(S, "O").
 
@@ -503,20 +485,14 @@ command(S, Command) ->
     command(S, Command, ?COMMAND_TIMEOUT).
 
 command(S, Command, Timeout) ->
-<<<<<<< HEAD
-    ?dbg(S,"CANUSB:command: ~p\n", [Command]),
-    SL = sl,
-    SL:send(S#s.sl, [Command, $\r]),
-=======
     lager:debug("can_usb:command: [~p]", [Command]),
     uart:send(S#s.uart, [Command, $\r]),
->>>>>>> tonyrog/master
     wait_reply(S,Timeout).
 
 wait_reply(S,Timeout) ->
     receive
 	{uart,U,Data} when U==S#s.uart ->
-	    lager:debug("can_usb:data: ~p", [Data]),
+	    lager:debug("can_usb:data: ~p", [Data]),	    
 	    Data1 = <<(S#s.buf)/binary,Data/binary>>,
 	    case parse(Data1, [], S#s{ buf=Data1 }) of
 		{more,S1} ->
@@ -547,7 +523,7 @@ output_error(Reason,S) ->
 oerr(Reason,S) ->
     lager:debug("can_usb:output error: ~p", [Reason]),
     S1 = count(output_error, S),
-    count({output_error,Reason}, S1).
+    count({output_error,Reason}, S1).    
 
 ierr(Reason,S) ->
     lager:debug("can_usb:input error: ~p", [Reason]),
@@ -559,7 +535,7 @@ parse_all(S) ->
     case parse(S#s.buf, [], S) of
 	{more,S1} ->
 	    {more, S1};
-	{ok,_,S1} ->
+	{ok,_,S1} -> 
 	    %% replies to command should? not be interleaved, check?
 	    parse_all(S1);
 	{_Error,S1} ->
@@ -567,7 +543,7 @@ parse_all(S) ->
 	    parse_all(S1)
     end.
 
-%% Parse one reply while accepting new frames
+%% Parse one reply while accepting new frames    
 parse(<<>>, Acc, S) ->
     {more, S#s { acc=Acc} };
 parse(Buf0, Acc, S) ->
@@ -637,7 +613,7 @@ parse_29(<<I7,I6,I5,I4,I3,I2,I1,I0,L,Ds/binary>>,Rtr,S) ->
     end;
 parse_29(_Buf,_Rtr,S) ->
     {more, S}.
-
+    
 
 parse_message(ID,Len,Ext,Rtr,Ds,S) ->
     case parse_data(Len,Rtr,Ds,[]) of
@@ -673,7 +649,7 @@ parse_data(L,Rtr,<<H1,H0,Buf/binary>>, Acc) when L > 0 ->
     try erlang:list_to_integer([H1,H0],16) of
 	H ->
 	    parse_data(L-1,Rtr,Buf,[H|Acc])
-    catch
+    catch 
 	error:_ ->
 	    {{error,?can_error_corrupt}, Buf}
     end;
@@ -728,40 +704,25 @@ error_frame(Code, ID, Intf, D0, D1, D2, D3, D4) ->
        Code =:= 0 ->
 	    {true,
 	     #can_frame { id=ID bor ?CAN_ERR_FLAG,
-			  len=8,
+			  len=8, 
 			  data = <<D0,D1,D2,D3,D4,0,0,0 >>,
 			  intf = Intf,
 			  ts = -1 }};
        Code band ?CANUSB_ERROR_RECV_FIFO_FULL =/= 0 ->
-<<<<<<< HEAD
-	    error_logger:error_msg("error, recv_fifo_full\n"),
-	    error_frame(Code - ?CANUSB_ERROR_RECV_FIFO_FULL,
-=======
 	    lager:error("error, recv_fifo_full"),
-	    error_frame(Code - ?CANUSB_ERROR_RECV_FIFO_FULL,
->>>>>>> tonyrog/master
+	    error_frame(Code - ?CANUSB_ERROR_RECV_FIFO_FULL, 
 			ID bor ?CAN_ERR_CRTL, Intf,
 			D0, (D1 bor ?CAN_ERR_CRTL_RX_OVERFLOW),
 			D2, D3, D4);
        Code band ?CANUSB_ERROR_SEND_FIFO_FULL =/= 0 ->
-<<<<<<< HEAD
-	    error_logger:error_msg("error, send_fifo_full\n"),
-	    error_frame(Code - ?CANUSB_ERROR_SEND_FIFO_FULL,
-=======
 	    lager:error("error, send_fifo_full"),
-	    error_frame(Code - ?CANUSB_ERROR_SEND_FIFO_FULL,
->>>>>>> tonyrog/master
+	    error_frame(Code - ?CANUSB_ERROR_SEND_FIFO_FULL, 
 			ID bor ?CAN_ERR_CRTL, Intf,
 			D0, (D1 bor ?CAN_ERR_CRTL_TX_OVERFLOW),
 			D2, D3, D4);
        Code band ?CANUSB_ERROR_WARNING =/= 0 ->
-<<<<<<< HEAD
-	    error_logger:error_msg("error, warning\n"),
-	    error_frame(Code - ?CANUSB_ERROR_WARNING,
-=======
 	    lager:error("error, warning"),
-	    error_frame(Code - ?CANUSB_ERROR_WARNING,
->>>>>>> tonyrog/master
+	    error_frame(Code - ?CANUSB_ERROR_WARNING, 
 			ID bor ?CAN_ERR_CRTL, Intf,
 			D0, D1 bor (?CAN_ERR_CRTL_RX_WARNING bor
 					?CAN_ERR_CRTL_TX_WARNING),
@@ -769,30 +730,25 @@ error_frame(Code, ID, Intf, D0, D1, D2, D3, D4) ->
        Code band ?CANUSB_ERROR_DATA_OVER_RUN =/= 0 ->
 	    lager:error("error, data_over_run"),
 	    %% FIXME: not really ?
-	    error_frame(Code - ?CANUSB_ERROR_DATA_OVER_RUN,
+	    error_frame(Code - ?CANUSB_ERROR_DATA_OVER_RUN, 
 			ID bor ?CAN_ERR_CRTL, Intf,
 			D0, (D1 bor ?CAN_ERR_CRTL_RX_OVERFLOW),
 			D2, D3, D4);
 
        Code band ?CANUSB_ERROR_RESERVED_10 =/= 0 ->
-	    error_frame(Code - ?CANUSB_ERROR_RESERVED_10,
+	    error_frame(Code - ?CANUSB_ERROR_RESERVED_10, 
 			ID, Intf, D0, D1, D2, D3, D4);
-
+	    
        Code band ?CANUSB_ERROR_PASSIVE =/= 0 ->
 	    lager:error("error, passive"),
 	    error_frame(Code - ?CANUSB_ERROR_PASSIVE,
-			ID bor ?CAN_ERR_CRTL, Intf,
+			ID bor ?CAN_ERR_CRTL, Intf, 
 			D0, D1 bor (?CAN_ERR_CRTL_RX_PASSIVE bor
 					?CAN_ERR_CRTL_TX_PASSIVE),
 			D2, D3, D4);
        Code band ?CANUSB_ERROR_ARBITRATION_LOST =/= 0 ->
-<<<<<<< HEAD
-	    error_logger:error_msg("error, arbitration_lost\n"),
-	    error_frame(Code - ?CANUSB_ERROR_ARBITRATION_LOST,
-=======
 	    lager:error("error, arbitration_lost"),
-	    error_frame(Code - ?CANUSB_ERROR_ARBITRATION_LOST,
->>>>>>> tonyrog/master
+	    error_frame(Code - ?CANUSB_ERROR_ARBITRATION_LOST, 
 			ID bor ?CAN_ERR_LOSTARB, Intf,
 			D0, D1, D2, D3, D4);
        Code band ?CANUSB_ERROR_BUS =/= 0 ->
@@ -802,5 +758,5 @@ error_frame(Code, ID, Intf, D0, D1, D2, D3, D4) ->
 			D0, D1, D2, D3, D4)
     end.
 
-
-
+       
+	    
