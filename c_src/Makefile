@@ -8,12 +8,12 @@ PRIVDIR := ../priv
 
 all : $(PRIVDIR)/can_sock_drv.so 
 
-override CFLAGS += -fpic -shared -I ../../../erlang-eapi-*/git/include/
+override CFLAGS += -fpic -shared -I ../../../erlang-dthread-*/git/include/
 
 
-$(PRIVDIR)/can_sock_drv.so : can_sock_drv.o can_sock_drv_impl.o
-	$(CC) -shared -fpic $(LDFLAGS) ../../../erlang-eapi-*/git/priv/eapi_drv.so -o $@ $^ 
+$(PRIVDIR)/can_sock_drv.so : can_sock_drv.o
+	$(CC) -shared -fpic $(LDFLAGS) ../../../erlang-dthread-*/git/priv/dthread_drv.so -o $@ $^ 
 
 clean:
-	$(RM) -f $(PRIVDIR)/can_sock_drv.so can_sock_drv.o can_sock_drv_impl.o 
+	$(RM) -f $(PRIVDIR)/can_sock_drv.so can_sock_drv.o
 
