@@ -14,7 +14,7 @@ This implementation currently supports three different backends:
 
 Any number of backend interfaces may be started and attached to the
 can\_router, which is the main interface to receice and send CAN frames.<br/>
-An application will typically call can_router:attach() and then 
+An application will typically call can_router:attach() and then
 receive CAN frames from any of the interfaces. To send a frame then
 simple call can:send/n, this will pass the CAN frame to all the
 interfaces and connected local applications in the Erlang node.
@@ -52,16 +52,16 @@ $ git clone git://github.com/tonyrog/can.git
 
 #### Create a virtual CAN network interface called 'vcan0'
     $ sudo ip link add dev vcan0 type vcan
-     
+
 #### Activate a virtual CAN network interface called 'vcan0'
     $ sudo ifconfig vcan0 up
 
 #### Remote a (virtual) CAN network interface 'vcan0'
     $ sudp ip link del vcan0
-    
+
 #### Create a virtual CAN network interface
     $ sudo ip link add type vcan
-    
+
 ...
 
 #### Files
@@ -86,7 +86,7 @@ $ rebar compile
 $ erl -pa <path>/can/ebin
 >can_router:start().
 ```
-(Instead of specifying the path to the ebin directory you can set the environment ERL_LIBS.)
+(Instead of specifying the path to the ebin directory you can set the environment variable ERL_LIBS.)
 
 Stop:
 
