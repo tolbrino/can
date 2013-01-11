@@ -86,7 +86,7 @@ $ rebar compile
 $ erl -pa <path>/can/ebin
 >can_router:start().
 ```
-(Instead of specifing the path to the ebin directory you can set the environment ERL_LIBS.)
+(Instead of specifying the path to the ebin directory you can set the environment ERL_LIBS.)
 
 Stop:
 

@@ -1,5 +1,5 @@
 #
-# We assume that eapi has been checked out as well into an 
+# We assume that dthread has been checked out as well into an 
 # overlaid directory structure by 
 # meta-exosense/recipes-exodev/can/erlang-can.bb
 #
