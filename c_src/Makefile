@@ -16,7 +16,7 @@ $(PRIVDIR)/can_sock_drv.so : can_sock_drv.o
 	../../../erlang-dthread-*/git/c_src/dthread.o \
 	../../../erlang-dthread-*/git/c_src/dlib.o \
 	../../../erlang-dthread-*/git/c_src/dterm.o \
-	-lpthread  $@ $^ 
+	-lpthread -o  $@ $^ 
 
 clean:
 	$(RM) -f $(PRIVDIR)/can_sock_drv.so can_sock_drv.o
