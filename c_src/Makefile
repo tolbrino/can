@@ -12,7 +12,11 @@ override CFLAGS += -DDLOG_DEFAULT=DLOG_NONE -fpic -shared -I ../../../erlang-dth
 
 
 $(PRIVDIR)/can_sock_drv.so : can_sock_drv.o
-	$(CC) -shared -fpic $(LDFLAGS) ../../../erlang-dthread-*/git/priv/dthread_drv.so -o $@ $^ 
+	$(CC) -shared -fpic $(LDFLAGS) 	\
+	../../../erlang-dthread-*/git/c_src/dthread.o \
+	../../../erlang-dthread-*/git/c_src/dlib.o \
+	../../../erlang-dthread-*/git/c_src/dterm.o \
+	-lpthread  $@ $^ 
 
 clean:
 	$(RM) -f $(PRIVDIR)/can_sock_drv.so can_sock_drv.o
