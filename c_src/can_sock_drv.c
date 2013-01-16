@@ -37,22 +37,15 @@
 
 #include <linux/can.h>
 #include <linux/can/raw.h>
+#include "can_drv.h"
 
 #ifndef PF_CAN
 #define PF_CAN 29
 #endif
- 
+
 #ifndef AF_CAN
 #define AF_CAN PF_CAN
 #endif
-
-#define ATOM(NAME) am_ ## NAME
-#define INIT_ATOM(NAME) am_ ## NAME = driver_mk_atom(#NAME)
-
-#define CTL_OK     0
-#define CTL_ERROR  1
-#define CTL_UINT32 2
-#define CTL_STRING 3
 
 #include "dthread.h"
 
@@ -60,7 +53,7 @@ typedef struct _drv_ctx_t
 {
     ErlDrvPort     port;        // port controling the thread
     ErlDrvTermData dport;       // the port identifier as DriverTermData
-    ErlDrvTermData owner;       // owner process pid 
+    ErlDrvTermData owner;       // owner process pid
     ErlDrvEvent    sock;        // Can socket
     int   intf;                 // bound interface index
 } drv_ctx_t;
@@ -72,48 +65,6 @@ typedef struct _x_can_frame
     struct can_frame f;
 } x_can_frame;
 
-#define CAN_SOCK_DRV_CMD_IFNAME 1
-#define CAN_SOCK_DRV_CMD_IFINDEX 2
-#define CAN_SOCK_DRV_CMD_SET_ERROR_FILTER 3
-#define CAN_SOCK_DRV_CMD_SET_LOOPBACK 4
-#define CAN_SOCK_DRV_CMD_RECV_OWN_MESSAGES 5
-#define CAN_SOCK_DRV_CMD_BIND 6
-#define CAN_SOCK_DRV_CMD_SEND 7
-
-static inline uint32_t get_uint32(char* ptr)
-{
-    uint8_t* p = (uint8_t*) ptr;
-    uint32_t value = (p[0]<<24) | (p[1]<<16) | (p[2]<<8) | (p[3]<<0);
-    return value;
-}
-
-static inline uint16_t get_uint16(char* ptr)
-{
-    uint8_t* p = (uint8_t*) ptr;
-    uint16_t value = (p[0]<<8) | (p[1]<<0);
-    return value;
-}
-
-static inline uint8_t get_uint8(char* ptr)
-{
-    return ((uint8_t*)ptr)[0];
-}
-
-static inline void put_uint16(char* ptr, uint16_t v)
-{
-    uint8_t* p = (uint8_t*) ptr;
-    p[0] = v>>8;
-    p[1] = v;
-}
-
-static inline void put_uint32(char* ptr, uint32_t v)
-{
-    uint8_t* p = (uint8_t*) ptr;
-    p[0] = v>>24;
-    p[1] = v>>16;
-    p[2] = v>>8;
-    p[3] = v;
-}
 
 static int  can_sock_drv_init(void);
 static void can_sock_drv_finish(void);
@@ -240,34 +191,21 @@ static int send_frame(drv_ctx_t* ctx, x_can_frame* frame)
 		      &frame->f, sizeof(struct can_frame),
 		      0, (struct sockaddr*)&addr, sizeof(addr));
     }
-}    
-
-static char* format_command(int cmd)
-{
-    switch(cmd) {
-    case CAN_SOCK_DRV_CMD_IFNAME: return "ifname";
-    case CAN_SOCK_DRV_CMD_IFINDEX: return "ifindex";
-    case CAN_SOCK_DRV_CMD_SET_ERROR_FILTER: return "set_error_filter";
-    case CAN_SOCK_DRV_CMD_SET_LOOPBACK: return "set_loopback";
-    case CAN_SOCK_DRV_CMD_RECV_OWN_MESSAGES: return "revc_own_messages";
-    case CAN_SOCK_DRV_CMD_BIND:  return "bind";
-    case CAN_SOCK_DRV_CMD_SEND:  return "send";
-    default: return "????";
-    }
 }
 
-static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d, 
+
+static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d,
 				     unsigned int cmd, char* buf,
 				     ErlDrvSizeT len,
 				     char** rbuf, ErlDrvSizeT rsize)
 {
     drv_ctx_t* ctx = (drv_ctx_t*) d;
 
-    DEBUGF("can_sock_drv: ctl: cmd=%u(%s), len=%d", 
+    DEBUGF("can_sock_drv: ctl: cmd=%u(%s), len=%d",
 	   cmd, format_command(cmd), len);
 
     switch(cmd) {
-    case CAN_SOCK_DRV_CMD_IFNAME: {
+    case CAN_DRIVER_CMD_IFNAME: {
 	int index;
 	struct ifreq ifr;
 
@@ -279,13 +217,13 @@ static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d,
 	    ifr.ifr_ifindex = index;
 	    if (ioctl(DTHREAD_EVENT(ctx->sock), SIOCGIFNAME, &ifr) < 0)
 		return ctl_reply_error(errno, rbuf, rsize);
-	    else 
+	    else
 		return ctl_reply(CTL_STRING,ifr.ifr_name, strlen(ifr.ifr_name),
 				 rbuf, rsize);
 	}
     }
 
-    case CAN_SOCK_DRV_CMD_IFINDEX: {
+    case CAN_DRIVER_CMD_IFINDEX: {
 	struct ifreq ifr;
 
 	if (len == 0)
@@ -300,7 +238,7 @@ static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d,
 	    return ctl_reply_u32(ifr.ifr_ifindex, rbuf, rsize);
     }
 
-    case CAN_SOCK_DRV_CMD_SET_ERROR_FILTER: {
+    case CAN_DRIVER_CMD_SET_ERROR_FILTER: {
 	can_err_mask_t m;
 	int r;
 
@@ -315,7 +253,7 @@ static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d,
 	    return ctl_reply_ok(rbuf, rsize);
     }
 
-    case CAN_SOCK_DRV_CMD_SET_LOOPBACK: {
+    case CAN_DRIVER_CMD_SET_LOOPBACK: {
 	int value;
 	int r;
 
@@ -330,8 +268,8 @@ static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d,
 	    return ctl_reply_ok(rbuf, rsize);
     }
 
-    case CAN_SOCK_DRV_CMD_RECV_OWN_MESSAGES: {
-	int value; 
+    case CAN_DRIVER_CMD_RECV_OWN_MESSAGES: {
+	int value;
 	int r;
 	if (len != 1)
 	    return ctl_reply_error(EINVAL, rbuf, rsize);
@@ -345,7 +283,7 @@ static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d,
 	    return ctl_reply_ok(rbuf, rsize);
     }
 
-    case CAN_SOCK_DRV_CMD_BIND: {
+    case CAN_DRIVER_CMD_BIND: {
 	int index;
 	struct sockaddr_can addr;
 
@@ -365,7 +303,7 @@ static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d,
 	}
     }
 
-    case CAN_SOCK_DRV_CMD_SEND: {
+    case CAN_DRIVER_CMD_SEND: {
 	int       index;
 	uint32_t  id;
 	uint8_t   flen;
@@ -382,7 +320,7 @@ static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d,
 	fptr   = buf+9;  // this are is always 8 bytes!
 	// intf  = (int) get_uint32(buf+17);
 	// ts    = (int) get_uint32(buf+21);
-	
+
 	if (flen > 8)
 	    return ctl_reply_error(EINVAL, rbuf, rsize);
 	else if ((index == 0) && (ctx->intf == 0))
@@ -392,7 +330,7 @@ static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d,
 	    xframe.f.can_id = id;
 	    xframe.f.can_dlc = flen & 0xF;
 	    memcpy(xframe.f.data, fptr, 8);
-	    
+
 	    // FIXME: drop packets when full! (deq old, enq new)
 	    if (driver_sizeq(ctx->port) == 0) {
 		int r = send_frame(ctx, &xframe);
@@ -453,7 +391,7 @@ static void can_sock_drv_ready_input(ErlDrvData d, ErlDrvEvent e)
 		    dterm_buf_binary(&t, (char*) frame.data,
 				     (frame.can_dlc & 0xf));
 		    dterm_int(&t,  addr.can_ifindex);
-		    // fixme timestamp, if requested 
+		    // fixme timestamp, if requested
 		    dterm_int(&t, -1);
 		}
 		dterm_tuple_end(&t, &m3);
