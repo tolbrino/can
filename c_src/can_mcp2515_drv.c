@@ -141,6 +141,7 @@ static ErlDrvData can_mcp2515_drv_start(ErlDrvPort port, char* command)
 	return ERL_DRV_ERROR_ERRNO;
 
     set_port_control_flags(port, PORT_CONTROL_FLAG_BINARY);
+    ioctl(desc, MCP2515_CAN_IOCTLOOPBACKMODE, 1);
 
     ctx = DZALLOC(sizeof(drv_ctx_t));
     ctx->port = port;
