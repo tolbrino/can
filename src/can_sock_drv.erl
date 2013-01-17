@@ -17,7 +17,7 @@
 
 -module(can_sock_drv).
 
--export([open/0]).
+-export([open/1]).
 -export([close/1]).
 -export([set_loopback/2]).
 -export([ifindex/2]).
@@ -35,10 +35,9 @@
 -define(CTL_UINT32, 2).
 -define(CTL_STRING, 3).
 
-open() ->
+open(Driver) ->
     Path = code:priv_dir(can),
     %% {Type,_} = os:type(),
-    Driver = "can_sock_drv", 
     case erl_ddll:load(Path, Driver) of
 	ok ->
 	    Command = Driver,
@@ -51,28 +50,28 @@ open() ->
 close(Port) when is_port(Port) ->
     erlang:port_close(Port).
 
-ifname(Port,Index) when is_port(Port), is_integer(Index), Index>=0 -> 
+ifname(Port,Index) when is_port(Port), is_integer(Index), Index>=0 ->
     call(Port,?CAN_SOCK_DRV_CMD_IFNAME, <<Index:32>>).
 
-ifindex(Port,Name) when is_port(Port) -> 
+ifindex(Port,Name) when is_port(Port) ->
     Bin = iolist_to_binary(Name),
     call(Port,?CAN_SOCK_DRV_CMD_IFINDEX, Bin).
 
-set_error_filter(Port,Mask) when is_port(Port), is_integer(Mask), Mask>0-> 
+set_error_filter(Port,Mask) when is_port(Port), is_integer(Mask), Mask>0->
     call(Port,?CAN_SOCK_DRV_CMD_SET_ERROR_FILTER, <<Mask:32>>).
 
-set_loopback(Port,Enable) when is_port(Port), is_boolean(Enable) -> 
+set_loopback(Port,Enable) when is_port(Port), is_boolean(Enable) ->
     Value=if Enable -> 1; true -> 0 end,
     call(Port,?CAN_SOCK_DRV_CMD_SET_LOOPBACK,<<Value:8>>).
 
-recv_own_messages(Port,Enable) when is_port(Port), is_boolean(Enable) -> 
+recv_own_messages(Port,Enable) when is_port(Port), is_boolean(Enable) ->
     Value=if Enable -> 1; true -> 0 end,
     call(Port,?CAN_SOCK_DRV_CMD_RECV_OWN_MESSAGES,<<Value:8>>).
 
-bind(Port,Index) when is_port(Port), is_integer(Index), Index>=0 -> 
+bind(Port,Index) when is_port(Port), is_integer(Index), Index>=0 ->
     call(Port,?CAN_SOCK_DRV_CMD_BIND, <<Index:32>>).
 
-send(Port,Index,Frame) when is_port(Port), is_integer(Index), 
+send(Port,Index,Frame) when is_port(Port), is_integer(Index),
 			    is_record(Frame, can_frame) ->
     Pad  = 8-byte_size(Frame#can_frame.data),
     Data = if Pad > 0 ->

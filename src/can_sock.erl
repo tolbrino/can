@@ -26,7 +26,7 @@
 -behaviour(gen_server).
 
 %% API
--export([start/0, start/1, start/2]).
+-export([start/0, start/1, start/3]).
 -export([stop/1, debug/2]).
 
 %% gen_server callbacks
@@ -41,12 +41,12 @@
 	  stat,        %% counter dictionary
 	  fs,          %% can_router:fs_new()
 	  debug=false  %% debug output (when debug compiled)
-	 }).	
+	 }).
 
 -include("../include/can.hrl").
 
 -ifdef(debug).
--define(dbg(S,Fmt,As), 
+-define(dbg(S,Fmt,As),
 	if (S)#s.debug =:= true ->
 		io:format((Fmt), (As));
 	   true ->
@@ -67,11 +67,11 @@ start() ->
     start("can0").
 
 start(IfName) ->
-    start(IfName,[]).
+    start(IfName, "can_sock_drv", []).
 
-start(IfName, Opts) ->
+start(IfName, DriverName, Opts) ->
     can_router:start(),
-    gen_server:start(?MODULE, [IfName,Opts], []).
+    gen_server:start(?MODULE, [IfName, DriverName, Opts], []).
 
 stop(Pid) ->
     gen_server:call(Pid, stop).
@@ -91,8 +91,8 @@ debug(Pid, Value) when is_boolean(Value) ->
 %% Description: Initiates the server
 %%--------------------------------------------------------------------
 
-init([IfName,_Opts]) ->
-    case can_sock_drv:open() of
+init([IfName,DriverName, _Opts]) ->
+    case can_sock_drv:open(DriverName) of
 	{ok,Port} ->
 	    case get_index(Port, IfName) of
 		{ok,Index} ->
@@ -143,7 +143,7 @@ handle_call({del_filter,I}, _From, S) ->
     {reply, Reply, S#s { fs=Fs }};
 handle_call({get_filter,I}, _From, S) ->
     Reply = can_router:fs_get(I,S#s.fs),
-    {reply, Reply, S};  
+    {reply, Reply, S};
 handle_call(list_filter, _From, S) ->
     Reply = can_router:fs_list(S#s.fs),
     {reply, Reply, S};
@@ -179,7 +179,7 @@ handle_cast({del_filter,From,I}, S) ->
 handle_cast({get_filter,From,I}, S) ->
     Reply = can_router:fs_get(I,S#s.fs),
     gen_server:reply(From, Reply),
-    {noreply, S};  
+    {noreply, S};
 handle_cast({list_filter,From}, S) ->
     Reply = can_router:fs_list(S#s.fs),
     gen_server:reply(From, Reply),
@@ -242,7 +242,7 @@ send_message(Mesg, S) when is_record(Mesg,can_frame) ->
     end;
 send_message(_Mesg, S) ->
     output_error(?can_error_data,S).
-    
+
 count(Item,S) ->
     Stat = dict:update_counter(Item, 1, S#s.stat),
     S#s { stat = Stat }.
