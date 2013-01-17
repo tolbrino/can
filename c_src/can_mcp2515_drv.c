@@ -133,15 +133,44 @@ static ErlDrvData can_mcp2515_drv_start(ErlDrvPort port, char* command)
     (void) command;
     drv_ctx_t* ctx = NULL;
     int desc;
+    struct mcp2515_can_filter not_filter = {
+		.sidmask = 0,
+		.eidmask = 0,
+		.mode = 0,
+    };
 
     INFOF("memory allocated: %ld", dlib_allocated());
     INFOF("total memory allocated: %ld", dlib_total_allocated());
 
-    if ((desc = open(MCP2515_CAN_PATH, O_RDWR)) < 0)
+    if ((desc = open(MCP2515_CAN_PATH, O_RDWR)) < 0) {
+	INFOF("Could not open %s: %s\n",
+	      MCP2515_CAN_PATH, strerror(errno));
 	return ERL_DRV_ERROR_ERRNO;
+    }
+
+    if (ioctl(desc, MCP2515_CAN_IOCSFILTER, &not_filter) == -1) {
+	INFOF("Could not ioctl(FILTER) %s: %s\n",
+	      MCP2515_CAN_PATH, strerror(errno));
+	close(desc);
+	return ERL_DRV_ERROR_ERRNO;
+    }
+
+    // FIXME: Make speed setting configurable!
+    if (ioctl(desc, MCP2515_CAN_IOCSRATE, 500000) == -1) {
+	INFOF("Could not ioctl(SPEED) %s: %s\n",
+	      MCP2515_CAN_PATH, strerror(errno));
+	close(desc);
+	return ERL_DRV_ERROR_ERRNO;
+    }
+
+    if (ioctl(desc, MCP2515_CAN_IOCTNORMALMODE, 1) == -1) {
+	INFOF("Could not ioctl(NORMALMODE) %s: %s\n",
+	      MCP2515_CAN_PATH, strerror(errno));
+	close(desc);
+	return ERL_DRV_ERROR_ERRNO;
+    }
 
     set_port_control_flags(port, PORT_CONTROL_FLAG_BINARY);
-    ioctl(desc, MCP2515_CAN_IOCTLOOPBACKMODE, 1);
 
     ctx = DZALLOC(sizeof(drv_ctx_t));
     ctx->port = port;
