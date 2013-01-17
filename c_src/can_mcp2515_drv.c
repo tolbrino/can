@@ -299,6 +299,7 @@ static void can_mcp2515_drv_ready_input(ErlDrvData d, ErlDrvEvent e)
     dterm_mark_t m2;
     dterm_mark_t m3;
     mcp2515_can_frame frame;
+    unsigned int header_id = 0;
 
     DEBUGF("can_mcp2515_drv: ready_input called");
 
@@ -318,9 +319,14 @@ static void can_mcp2515_drv_ready_input(ErlDrvData d, ErlDrvEvent e)
 		dterm_atom(&t, ATOM(can_frame));
 
 		if (frame.header.ide)
-		    dterm_uint(&t, frame.header.id & (frame.header.eid << 11));
+		    header_id = frame.header.id | (frame.header.eid << 11) | CAN_EFF_FLAG;
 		else
-		    dterm_uint(&t, frame.header.id);
+		    header_id = frame.header.id;
+
+		if (frame.header.rtr)
+		    header_id |= CAN_RTR_FLAG;
+
+		dterm_uint(&t, header_id);
 
 		dterm_uint(&t, frame.header.dlc);
 		// check rtr?
