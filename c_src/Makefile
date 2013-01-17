@@ -26,5 +26,6 @@ $(PRIVDIR)/can_mcp2515_drv.so : can_mcp2515_drv.o
 	-lpthread -o  $@ $^
 
 clean:
-	$(RM) -f $(PRIVDIR)/can_sock_drv.so can_sock_drv.o can_mcp2515_drv.o
+	$(RM) -f $(PRIVDIR)/can_sock_drv.so $(PRIVDIR)/can_mcp2515_drv.so \
+		can_sock_drv.o can_mcp2515_drv.o
 
