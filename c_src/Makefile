@@ -11,7 +11,7 @@ all : $(PRIVDIR)/can_sock_drv.so
 override CFLAGS += -DDLOG_DEFAULT=DLOG_NONE -fpic -shared -I ../../../erlang-dthread-*/git/include/
 
 
-$(PRIVDIR)/can_sock_drv.so : can_sock_drv.o can_mcp2515_drv.c
+$(PRIVDIR)/can_sock_drv.so : can_sock_drv.o can_mcp2515_drv.o
 	$(CC) -shared -fpic $(LDFLAGS) 	\
 	../../../erlang-dthread-*/git/c_src/dthread.o \
 	../../../erlang-dthread-*/git/c_src/dlib.o \
