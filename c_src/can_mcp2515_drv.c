@@ -302,7 +302,7 @@ static void can_mcp2515_drv_ready_input(ErlDrvData d, ErlDrvEvent e)
     mcp2515_can_frame frame;
     unsigned int header_id = 0;
     int res = 0;
-
+    unsigned char c;
     DEBUGF("can_mcp2515_drv: ready_input called");
 
     memset(&frame, 0, sizeof(frame));
@@ -314,6 +314,9 @@ static void can_mcp2515_drv_ready_input(ErlDrvData d, ErlDrvEvent e)
     res = poll(&fds, 1, 0);
 
     DEBUGF("can_mcp2515_drv: poll returned [%d]. revents[%d]", res, fds.revents);
+    while(read(DTHREAD_EVENT(ctx->desc), &c, 1) == 1)
+	DEBUGF("can_mcp2515_drv: got [%d / %.2X]", c & 0xFF, c & 0xFF);
+
     if (read(DTHREAD_EVENT(ctx->desc), &frame, sizeof(frame)) != sizeof(frame))
 	return;
 
