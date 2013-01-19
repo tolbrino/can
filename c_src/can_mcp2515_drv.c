@@ -20,7 +20,6 @@
 #include <sys/stat.h>
 #include <sys/unistd.h>
 #include <fcntl.h>
-#include <poll.h>
 
 // CROSS COMPILE
 // when missing can.h files add symbolic links to host ...
@@ -331,26 +330,12 @@ static void can_mcp2515_drv_ready_input(ErlDrvData d, ErlDrvEvent e)
     dterm_mark_t m3;
     mcp2515_can_frame frame;
     unsigned int header_id = 0;
-    int res = 0;
-    unsigned char c;
-    DEBUGF("can_mcp2515_drv: ready_input called");
 
     memset(&frame, 0, sizeof(frame));
-    struct pollfd fds;
-
-    fds.fd = (int) ctx->desc;
-    fds.events = POLLIN;
-    fds.revents = 0;
-    res = poll(&fds, 1, 0);
-
-    DEBUGF("can_mcp2515_drv: poll returned [%d]. revents[%d]", res, fds.revents);
-    while(read(DTHREAD_EVENT(ctx->desc), &c, 1) == 1)
-	DEBUGF("can_mcp2515_drv: got [%d / %.2X]", c & 0xFF, c & 0xFF);
 
     if (read(DTHREAD_EVENT(ctx->desc), &frame, sizeof(frame)) != sizeof(frame))
 	return;
 
-    DEBUGF("can_mcp2515_drv: Read complete");
     dterm_init(&t);
 
     DEBUGF("can_mcp2515_drv: ready_input got frame");
