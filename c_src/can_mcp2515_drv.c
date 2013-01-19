@@ -332,6 +332,7 @@ static void can_mcp2515_drv_ready_input(ErlDrvData d, ErlDrvEvent e)
     unsigned int header_id = 0;
 
     memset(&frame, 0, sizeof(frame));
+    DEBUGF("can_mcp2515_drv: ready_input called");
 
     if (read(DTHREAD_EVENT(ctx->desc), &frame, sizeof(frame)) != sizeof(frame))
 	return;
