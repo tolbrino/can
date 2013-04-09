@@ -53,6 +53,11 @@ $ git clone git://github.com/tonyrog/can.git
 #### Create a virtual CAN network interface called 'vcan0'
     $ sudo ip link add dev vcan0 type vcan
 
+#### Set the bitrate of the CAN network interface
+This must be done prior to bringing the interface up.
+
+    $ sudo ip link set vcan0 type can bitrate 125000
+
 #### Activate a virtual CAN network interface called 'vcan0'
     $ sudo ifconfig vcan0 up
 
@@ -62,8 +67,7 @@ $ git clone git://github.com/tonyrog/can.git
 #### Create a virtual CAN network interface
     $ sudo ip link add type vcan
 
-...
-
+ triple-sampling on
 #### Files
 
 ...
