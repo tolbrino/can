@@ -37,6 +37,7 @@
 
 open(Driver) ->
     Path = code:priv_dir(can),
+    io:format("Loading CAN driver (~p/~p) ~n", [ Path, Driver ]),
     %% {Type,_} = os:type(),
     case erl_ddll:load(Path, Driver) of
 	ok ->
