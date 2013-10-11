@@ -65,6 +65,51 @@ typedef struct _x_can_frame
     struct can_frame f;
 } x_can_frame;
 
+#define CAN_SOCK_DRV_CMD_IFNAME 1
+#define CAN_SOCK_DRV_CMD_IFINDEX 2
+#define CAN_SOCK_DRV_CMD_SET_ERROR_FILTER 3
+#define CAN_SOCK_DRV_CMD_SET_LOOPBACK 4
+#define CAN_SOCK_DRV_CMD_RECV_OWN_MESSAGES 5
+#define CAN_SOCK_DRV_CMD_BIND 6
+#define CAN_SOCK_DRV_CMD_SEND 7
+#define CAN_SOCK_DRV_CMD_SET_FILTER 8
+
+#define MAX_FILTER 256  // fixme
+
+static inline uint32_t get_uint32(char* ptr)
+{
+    uint8_t* p = (uint8_t*) ptr;
+    uint32_t value = (p[0]<<24) | (p[1]<<16) | (p[2]<<8) | (p[3]<<0);
+    return value;
+}
+
+static inline uint16_t get_uint16(char* ptr)
+{
+    uint8_t* p = (uint8_t*) ptr;
+    uint16_t value = (p[0]<<8) | (p[1]<<0);
+    return value;
+}
+
+static inline uint8_t get_uint8(char* ptr)
+{
+    return ((uint8_t*)ptr)[0];
+}
+
+static inline void put_uint16(char* ptr, uint16_t v)
+{
+    uint8_t* p = (uint8_t*) ptr;
+    p[0] = v>>8;
+    p[1] = v;
+}
+
+static inline void put_uint32(char* ptr, uint32_t v)
+{
+    uint8_t* p = (uint8_t*) ptr;
+    p[0] = v>>24;
+    p[1] = v>>16;
+    p[2] = v>>8;
+    p[3] = v;
+}
 
 static int  can_sock_drv_init(void);
 static void can_sock_drv_finish(void);
@@ -191,6 +236,21 @@ static int send_frame(drv_ctx_t* ctx, x_can_frame* frame)
 		      &frame->f, sizeof(struct can_frame),
 		      0, (struct sockaddr*)&addr, sizeof(addr));
     }
+}    
+
+static char* format_command(int cmd)
+{
+    switch(cmd) {
+    case CAN_SOCK_DRV_CMD_IFNAME: return "ifname";
+    case CAN_SOCK_DRV_CMD_IFINDEX: return "ifindex";
+    case CAN_SOCK_DRV_CMD_SET_ERROR_FILTER: return "set_error_filter";
+    case CAN_SOCK_DRV_CMD_SET_LOOPBACK: return "set_loopback";
+    case CAN_SOCK_DRV_CMD_RECV_OWN_MESSAGES: return "revc_own_messages";
+    case CAN_SOCK_DRV_CMD_BIND:  return "bind";
+    case CAN_SOCK_DRV_CMD_SEND:  return "send";
+    case CAN_SOCK_DRV_CMD_SET_FILTER: return "set_filter";
+    default: return "????";
+    }
 }
 
 
@@ -253,7 +313,31 @@ static ErlDrvSSizeT can_sock_drv_ctl(ErlDrvData d,
 	    return ctl_reply_ok(rbuf, rsize);
     }
 
-    case CAN_DRIVER_CMD_SET_LOOPBACK: {
+    case CAN_SOCK_DRV_CMD_SET_FILTER: {
+	struct can_filter rfilter[MAX_FILTER];
+	char* ptr = buf;
+	int r, i;
+	size_t n;
+
+	if ((len & 7) != 0) 
+	    return ctl_reply_error(EINVAL, rbuf, rsize);
+	n = len >> 3;
+	if (n > MAX_FILTER)
+	    return ctl_reply_error(EINVAL, rbuf, rsize);
+	for (i = 0; i < n; i++) {
+	    rfilter[i].can_id   = get_uint32(ptr);
+	    rfilter[i].can_mask = get_uint32(ptr+4);
+	    ptr += 8;
+	}
+	r = setsockopt(DTHREAD_EVENT(ctx->sock),
+		       SOL_CAN_RAW,CAN_RAW_FILTER,&rfilter,len);
+	if (r < 0)
+	    return ctl_reply_error(errno, rbuf, rsize);
+	else
+	    return ctl_reply_ok(rbuf, rsize);
+    }
+
+    case CAN_SOCK_DRV_CMD_SET_LOOPBACK: {
 	int value;
 	int r;
 
