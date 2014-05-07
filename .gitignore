@@ -1,2 +1,11 @@
-logs
-*~
+*~### https://raw.github.com/github/gitignore/master/Erlang.gitignore
+
+.eunit
+deps
+*.o
+*.beam
+*.plt
+*.app
+erl_crash.dump
+
+
