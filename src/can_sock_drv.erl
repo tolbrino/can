@@ -17,7 +17,7 @@
 
 -module(can_sock_drv).
 
--export([open/1]).
+-export([open/0]).
 -export([close/1]).
 -export([set_loopback/2]).
 -export([ifindex/2]).
@@ -36,9 +36,8 @@
 -define(CTL_UINT32, 2).
 -define(CTL_STRING, 3).
 
-open(Driver) ->
+open() ->
     Path = code:priv_dir(can),
-    io:format("Loading CAN driver (~p/~p) ~n", [ Path, Driver ]),
     %% {Type,_} = os:type(),
     Driver = "can_sock_drv", 
     case load_driver(Path, Driver) of
