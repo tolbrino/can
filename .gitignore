@@ -7,5 +7,4 @@ deps
 *.plt
 *.app
 erl_crash.dump
-
-
+.rebar/

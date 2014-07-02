@@ -34,6 +34,7 @@
 #define CAN_DRIVER_CMD_RECV_OWN_MESSAGES 5
 #define CAN_DRIVER_CMD_BIND 6
 #define CAN_DRIVER_CMD_SEND 7
+#define CAN_DRIVER_CMD_SET_FILTER 8
 
 
 // Some common funcs to inline into the including code
@@ -82,6 +83,7 @@ static char* format_command(int cmd)
     case CAN_DRIVER_CMD_RECV_OWN_MESSAGES: return "revc_own_messages";
     case CAN_DRIVER_CMD_BIND:  return "bind";
     case CAN_DRIVER_CMD_SEND:  return "send";
+    case CAN_DRIVER_CMD_SET_FILTER: return "set_filter";
     default: return "????";
     }
 }
